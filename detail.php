@@ -22,10 +22,37 @@ if (!file_exists($filepath)) {
 $data = json_decode(file_get_contents($filepath), true);
 $judulSebelumnya = $_GET['judul'] ?? '';
 
-// Fungsi format rupiah
 function rupiah($angka)
 {
     return 'Rp ' . number_format((float)$angka, 0, ',', '.');
+}
+
+function terbilang($angka)
+{
+    $angka = (int)$angka;
+    $baca = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+
+    if ($angka < 12) {
+        return $baca[$angka];
+    } elseif ($angka < 20) {
+        return $baca[$angka - 10] . " Belas";
+    } elseif ($angka < 100) {
+        return terbilang(intval($angka / 10)) . " Puluh " . terbilang($angka % 10);
+    } elseif ($angka < 200) {
+        return "Seratus " . terbilang($angka - 100);
+    } elseif ($angka < 1000) {
+        return terbilang(intval($angka / 100)) . " Ratus " . terbilang($angka % 100);
+    } elseif ($angka < 2000) {
+        return "Seribu " . terbilang($angka - 1000);
+    } elseif ($angka < 1000000) {
+        return terbilang(intval($angka / 1000)) . " Ribu " . terbilang($angka % 1000);
+    } elseif ($angka < 1000000000) {
+        return terbilang(intval($angka / 1000000)) . " Juta " . terbilang($angka % 1000000);
+    } elseif ($angka < 1000000000000) {
+        return terbilang(intval($angka / 1000000000)) . " Miliar " . terbilang($angka % 1000000000);
+    } else {
+        return "Angka terlalu besar";
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -78,17 +105,6 @@ function rupiah($angka)
             border: 1px solid #ccc;
             padding: 12px;
             border-radius: 4px;
-        }
-
-        .nilai-box {
-            display: flex;
-            gap: 40px;
-            margin-top: 30px;
-            margin-bottom: 50px;
-        }
-
-        .nilai-box div {
-            flex: 1;
         }
 
         .ttd {
@@ -176,12 +192,26 @@ function rupiah($angka)
         </div>
     </div>
 
+    <!-- Vertikal: Nilai, Durasi, Status -->
+    <div class="section">
+        <h3>Nilai</h3>
+        <div class="box">
+            <?php
+            $nilai = (int) preg_replace('/[^\d]/', '', $data['nilai'] ?? 0);
+            ?>
+            <?= rupiah($nilai) ?><br>
+            <small><em>(<?= ucwords(trim(terbilang($nilai))) ?> Rupiah)</em></small>
+        </div>
+    </div>
 
+    <div class="section">
+        <h3>Durasi</h3>
+        <div class="box"><?= htmlspecialchars($data['durasi'] ?? '1 tahun') ?></div>
+    </div>
 
-    <div class="nilai-box">
-        <div><strong>Nilai:</strong><br><?= rupiah($data['nilai'] ?? 0) ?></div>
-        <div><strong>Durasi:</strong><br><?= htmlspecialchars($data['durasi'] ?? '1 tahun') ?></div>
-        <div><strong>Status:</strong><br><?= htmlspecialchars($data['status'] ?? '-') ?></div>
+    <div class="section">
+        <h3>Status</h3>
+        <div class="box"><?= htmlspecialchars($data['status'] ?? '-') ?></div>
     </div>
 
     <div class="ttd">
@@ -198,7 +228,5 @@ function rupiah($angka)
     <div class="footer">
         <a class="btn-back" href="kontrak_cetak.php?judul=<?= urlencode($judulSebelumnya) ?>">&larr; Kembali</a>
     </div>
-
 </body>
-
 </html>

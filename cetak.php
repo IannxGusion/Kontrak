@@ -25,6 +25,34 @@ function tampilPihak($kode, $nama)
 {
     return htmlspecialchars(trim($kode . ' - ' . $nama));
 }
+
+function terbilang($angka)
+{
+    $angka = (int)$angka;
+    $baca = ["", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas"];
+
+    if ($angka < 12) {
+        return $baca[$angka];
+    } elseif ($angka < 20) {
+        return $baca[$angka - 10] . " Belas";
+    } elseif ($angka < 100) {
+        return terbilang(intval($angka / 10)) . " Puluh " . terbilang($angka % 10);
+    } elseif ($angka < 200) {
+        return "Seratus " . terbilang($angka - 100);
+    } elseif ($angka < 1000) {
+        return terbilang(intval($angka / 100)) . " Ratus " . terbilang($angka % 100);
+    } elseif ($angka < 2000) {
+        return "Seribu " . terbilang($angka - 1000);
+    } elseif ($angka < 1000000) {
+        return terbilang(intval($angka / 1000)) . " Ribu " . terbilang($angka % 1000);
+    } elseif ($angka < 1000000000) {
+        return terbilang(intval($angka / 1000000)) . " Juta " . terbilang($angka % 1000000);
+    } elseif ($angka < 1000000000000) {
+        return terbilang(intval($angka / 1000000000)) . " Miliar " . terbilang($angka % 1000000000);
+    } else {
+        return "Angka terlalu besar";
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -157,20 +185,25 @@ function tampilPihak($kode, $nama)
     <?php endif; ?>
 
     <!-- Nilai, Durasi, Status -->
-    <div class="nilai-box">
-        <div>
-            <strong>Nilai:</strong><br>
-            <?= rupiah($data['nilai'] ?? 0) ?>
-        </div>
-        <div>
-            <strong>Durasi:</strong><br>
-            <?= htmlspecialchars($data['durasi'] ?? '-') ?>
-        </div>
-        <div>
-            <strong>Status:</strong><br>
-            <?= htmlspecialchars($data['status'] ?? '-') ?>
-        </div>
+    <div class="section">
+        <strong>Nilai:</strong><br>
+        <?php
+        $nilai = (int) preg_replace('/[^\d]/', '', $data['nilai'] ?? 0);
+        ?>
+        <?= rupiah($nilai) ?><br>
+        <em><small><strong>(<?= ucwords(trim(terbilang($nilai))) ?> Rupiah)</strong></small></em>
     </div>
+
+    <div class="section">
+        <strong>Durasi:</strong><br>
+        <?= htmlspecialchars($data['durasi'] ?? '-') ?>
+    </div>
+
+    <div class="section">
+        <strong>Status:</strong><br>
+        <?= htmlspecialchars($data['status'] ?? '-') ?>
+    </div>
+
 
     <!-- Tanda Tangan -->
     <div class="ttd">
