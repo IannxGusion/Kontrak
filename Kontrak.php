@@ -112,7 +112,7 @@ if ($editData) {
 
 <head>
     <meta charset="UTF-8">
-     <img src="logolti.png" width="200px" height="auto" alt="logo">
+    <title>Form Kontrak</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
@@ -232,7 +232,7 @@ if ($editData) {
 
 <body>
     <div class="navbar">
-        <div>✍️ Sistem Kontrak</div>
+         <img src="logolti.png" width="200px" height="auto" alt="logo">
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>
