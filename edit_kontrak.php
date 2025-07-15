@@ -257,7 +257,7 @@ if ($editData) {
 <body>
 
     <div class="navbar">
-        <div>✍️ Sistem Kontrak</div>
+         <img src="logolti.png" width="200px" height="auto" alt="logo">
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>

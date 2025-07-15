@@ -158,7 +158,7 @@ $filterStatus = $_GET['status'] ?? '';
 </head>
 <body>
     <div class="navbar">
-        <div>📂 Daftar Kontrak</div>
+        <img src="logolti.png" width="200px" height="auto" alt="logo">
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>

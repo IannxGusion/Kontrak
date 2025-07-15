@@ -112,7 +112,7 @@ if ($editData) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Form Kontrak</title>
+     <img src="logolti.png" width="200px" height="auto" alt="logo">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
