@@ -21,20 +21,7 @@ MariaDB [(none)]> show databases;
 +----------------------+
 16 rows in set (0.021 sec)
 
-MariaDB [(none)]> create database Kontrak;
-Query OK, 1 row affected (0.012 sec)
-
-MariaDB [(none)]> use database Kontrak;
-ERROR 1049 (42000): Unknown database 'database'
-MariaDB [(none)]> use Kontrak;
-Database changed
-MariaDB [Kontrak]> CREATE DATABASE Kontrak(
-    -> judul varchar(50),
-    -> );
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '(
-judul varchar(50),
-)' at line 1
-MariaDB [Kontrak]> Create database Kontrak(
+MariaDB [(none)]> Create table Kontrak(
     -> id int(11),
     -> no_kontrak varchar(100),
     -> judul varchar(255),
@@ -43,13 +30,13 @@ MariaDB [Kontrak]> Create database Kontrak(
     -> post2 text,
     -> post3 text,
     -> primary key(id));
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '(
-id int(11),
-no_kontrak varchar(100),
-judul varchar(255),
-tanggal date,
-post...' at line 1
-MariaDB [Kontrak]> Create table Kontrak(
+ERROR 1046 (3D000): No database selected
+MariaDB [(none)]> create database kontrak;
+Query OK, 1 row affected (0.006 sec)
+
+MariaDB [(none)]> use kontrak;
+Database changed
+MariaDB [kontrak]> Create table Kontrak(
     -> id int(11),
     -> no_kontrak varchar(100),
     -> judul varchar(255),
@@ -58,72 +45,13 @@ MariaDB [Kontrak]> Create table Kontrak(
     -> post2 text,
     -> post3 text,
     -> primary key(id));
-Query OK, 0 rows affected (0.094 sec)
+Query OK, 0 rows affected (0.032 sec)
 
-MariaDB [Kontrak]> show table kontrak;
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'kontrak' at line 1
-MariaDB [Kontrak]> show tables kontrak;
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'kontrak' at line 1
-MariaDB [Kontrak]> show tables;
-+-------------------+
-| Tables_in_kontrak |
-+-------------------+
-| kontrak           |
-+-------------------+
-1 row in set (0.009 sec)
-
-MariaDB [Kontrak]> describe kontrak;
-+------------+--------------+------+-----+---------+-------+
-| Field      | Type         | Null | Key | Default | Extra |
-+------------+--------------+------+-----+---------+-------+
-| id         | int(11)      | NO   | PRI | NULL    |       |
-| no_kontrak | varchar(100) | YES  |     | NULL    |       |
-| judul      | varchar(255) | YES  |     | NULL    |       |
-| tanggal    | date         | YES  |     | NULL    |       |
-| post1      | text         | YES  |     | NULL    |       |
-| post2      | text         | YES  |     | NULL    |       |
-| post3      | text         | YES  |     | NULL    |       |
-+------------+--------------+------+-----+---------+-------+
-7 rows in set (0.057 sec)
-
-MariaDB [Kontrak]> 
-    -> /exit
-    -> /
-    -> );
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '
-/exit
-/
-)' at line 1
-MariaDB [Kontrak]> MariaDB [(none)]> use Kontrak;
-Database changed
-MariaDB [Kontrak]> Show tables;
-+-------------------+
-| Tables_in_kontrak |
-+-------------------+
-| kontrak           |
-+-------------------+
-1 row in set (0.002 sec)
-
-MariaDB [Kontrak]> Create table User(
-    -> id int(11),
-    -> username varchar(100),
-    -> username varchar(100),
-    -> password varchar(100),
-    -> primary key(id));
-ERROR 1060 (42S21): Duplicate column name 'username'
-MariaDB [Kontrak]> Create table User(
+MariaDB [kontrak]> create table user(
     -> id int(11),
     -> username varchar(100),
     -> password varchar(100),
     -> primary key(id));
-Query OK, 0 rows affected (0.034 sec)
+Query OK, 0 rows affected (0.030 sec)
 
-MariaDB [Kontrak]> insert into user(username,password).
-    -> values('admin', 'admin123');
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '.
-values('admin', 'admin123')' at line 1
-MariaDB [Kontrak]> insert into user(username,password),
-    -> values('admin', 'admin123'));
-ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '
-values('admin', 'admin123'))' at line 1
-MariaDB [Kontrak]> 
+MariaDB [kontrak]> 

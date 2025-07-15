@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 14 Jul 2025 pada 12.00
+-- Waktu pembuatan: 15 Jul 2025 pada 05.04
 -- Versi server: 10.4.28-MariaDB
 -- Versi PHP: 8.2.4
 
@@ -48,13 +48,6 @@ CREATE TABLE `user` (
   `username` varchar(100) DEFAULT NULL,
   `password` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data untuk tabel `user`
---
-
-INSERT INTO `user` (`id`, `username`, `password`) VALUES
-(0, 'admin', 'admin123');
 
 --
 -- Indexes for dumped tables

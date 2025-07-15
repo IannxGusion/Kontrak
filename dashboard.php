@@ -132,7 +132,7 @@ if (!isset($_SESSION['login'])) {
 <body>
 
 <div class="navbar">
-    <div><strong>📄 Sistem Kontrak Online</strong></div>
+    <img src="logolti.png" width="200px" height="60px" alt="logo">
     <div>
         <a href="dashboard.php">🏠 Halaman Utama</a>
         <a href="kontrak.php">📝 Buat Kontrak</a>

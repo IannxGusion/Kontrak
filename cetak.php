@@ -23,6 +23,7 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <title>Cetak Kontrak</title>
@@ -33,36 +34,65 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
             font-size: 14px;
             line-height: 1.5;
         }
-        h2, h3 {
+
+        h2,
+        h3 {
             text-align: center;
             margin: 0;
         }
-        h2 { font-size: 20px; margin-bottom: 4px; }
-        h3 { font-size: 14px; margin-bottom: 20px; color: #555; }
-        .info, .poin, .footer {
+
+        h2 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        h3 {
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .info,
+        .poin,
+        .footer {
             margin-bottom: 12px;
         }
-        .label { font-weight: bold; display: inline-block; width: 110px; }
-        .box { border: 1px solid #ccc; padding: 10px; margin-top: 6px; }
+
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 110px;
+        }
+
+        .box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 6px;
+        }
+
         .deskripsi {
             text-align: center;
             font-weight: bold;
             margin: 20px 0;
         }
+
         .footer td {
             padding: 5px 10px;
             vertical-align: top;
         }
+
         .ttd {
             margin-top: 30px;
             display: flex;
             justify-content: space-between;
             padding: 0 20px;
         }
+
         .ttd div {
             width: 45%;
             text-align: center;
         }
+
         .ttd .nama {
             margin-top: 60px;
             border-top: 1px solid #000;
@@ -72,6 +102,7 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
         }
     </style>
 </head>
+
 <body onload="window.print()">
     <h2>KONTRAK KERJA</h2>
     <h3><?= htmlspecialchars($data['no_kontrak']) ?></h3>
@@ -81,33 +112,40 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
         <div><span class="label">Tanggal</span>: <?= date("d F Y", strtotime($data['tanggal'])) ?></div>
     </div>
 
-    <div class="poin"><strong>1. Para Pihak</strong>
+    <div class="poin"><strong>1. Pihak 1</strong>
         <div class="box"><?= nl2br(htmlspecialchars($data['pos1'])) ?></div>
     </div>
 
     <?php if (!empty($data['pos2'])): ?>
-    <div class="poin"><strong>2. Ruang Lingkup</strong>
-        <div class="box"><?= nl2br(htmlspecialchars($data['pos2'])) ?></div>
-    </div>
+        <div class="poin"><strong>2. Pihak 2</strong>
+            <div class="box"><?= nl2br(htmlspecialchars($data['pos2'])) ?></div>
+        </div>
     <?php endif; ?>
 
     <?php if (!empty($data['pos3'])): ?>
-    <div class="poin"><strong>3. Ketentuan Umum</strong>
-        <div class="box"><?= nl2br(htmlspecialchars($data['pos3'])) ?></div>
-    </div>
+        <div class="poin"><strong>3. Pihak 3</strong>
+            <div class="box"><?= nl2br(htmlspecialchars($data['pos3'])) ?></div>
+        </div>
     <?php endif; ?>
 
     <?php if (!empty($data['deskripsi'])): ?>
-    <div class="deskripsi"><?= nl2br(htmlspecialchars($data['deskripsi'])) ?></div>
+        <div class="deskripsi"><?= nl2br(htmlspecialchars($data['deskripsi'])) ?></div>
     <?php endif; ?>
 
-    <table class="footer">
+    <table class="footer" style="width: 100%; margin-top: 30px;">
         <tr>
-            <td><strong>Nilai</strong>:<br>Rp <?= number_format($nilai, 0, ',', '.') ?></td>
-            <td><strong>Durasi</strong>:<br><?= htmlspecialchars($data['durasi'] ?? '-') ?></td>
-            <td><strong>Status</strong>:<br><?= htmlspecialchars($data['status'] ?? '-') ?></td>
+            <td style="text-align: left;">
+                <strong>Nilai</strong>:<br>Rp <?= number_format($nilai, 0, ',', '.') ?>
+            </td>
+            <td style="text-align: 50px;">
+                <strong>Durasi</strong>:<br><?= htmlspecialchars($data['durasi'] ?? '-') ?>
+            </td>
+            <td style="text-align: right;">
+                <strong>Status</strong>:<br><?= htmlspecialchars($data['status'] ?? '-') ?>
+            </td>
         </tr>
     </table>
+
 
     <div class="ttd">
         <div>
@@ -120,4 +158,5 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
         </div>
     </div>
 </body>
+
 </html>
