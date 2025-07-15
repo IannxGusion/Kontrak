@@ -371,7 +371,7 @@ if ($editData) {
                 <label>Status Kontrak:</label>
                 <select name="status">
                     <?php
-                    $statusOptions = ["Aktif", "Tidak Aktif", "Menunggu", "Diproses", "Dipanding", "Disetujui", "Tidak Disetujui"];
+                    $statusOptions = [ "Menunggu", "Diproses", "Dipanding", "Disetujui", "Tidak Disetujui"];
                     foreach ($statusOptions as $status):
                     ?>
                         <option value="<?= $status ?>" <?= ($editData['status'] ?? '') == $status ? 'selected' : '' ?>>

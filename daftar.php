@@ -7,14 +7,10 @@ if (!isset($_SESSION['login'])) {
 
 $tahun = date("Y");
 $dir = __DIR__ . "/kontrak";
-$files = glob("$dir/kontrak_*.json");
-usort($files, fn($a, $b) => filemtime($b) - filemtime($a));
 
-// Notifikasi berhasil
 $pesan = "";
 if (isset($_GET['success'])) $pesan = "✅ Kontrak berhasil disimpan atau diperbarui.";
 
-// Hapus file
 if (isset($_GET['hapus'])) {
     $fileToDelete = $dir . "/" . basename($_GET['hapus']);
     if (file_exists($fileToDelete)) {
@@ -25,7 +21,9 @@ if (isset($_GET['hapus'])) {
     }
 }
 
-// Ambil filter status
+$files = glob("$dir/kontrak_*.json");
+usort($files, fn($a, $b) => filemtime($b) - filemtime($a));
+
 $filterStatus = $_GET['status'] ?? '';
 ?>
 <!DOCTYPE html>
@@ -164,7 +162,7 @@ $filterStatus = $_GET['status'] ?? '';
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>
-            <a href="kontrak_cetak.php">🖨️ cetak kontrak</a>
+            <a href="kontrak_cetak.php">🖨️ Cetak Kontrak</a>
             <a href="daftar.php">📂 Daftar Kontrak</a>
             <a href="logout.php">🚪 Logout</a>
         </div>
@@ -204,7 +202,8 @@ $filterStatus = $_GET['status'] ?? '';
             foreach ($files as $file):
                 $data = json_decode(file_get_contents($file), true);
                 if (!$data) continue;
-                if ($filterStatus && ($data['status'] ?? '') !== $filterStatus) continue;
+                if ($filterStatus && (!isset($data['status']) || $data['status'] !== $filterStatus)) continue;
+                $filename = basename($file);
             ?>
                 <tr>
                     <td><?= htmlspecialchars($data['no_kontrak']) ?></td>
@@ -212,8 +211,8 @@ $filterStatus = $_GET['status'] ?? '';
                     <td><?= date("d-m-Y", strtotime($data['tanggal'])) ?></td>
                     <td><?= htmlspecialchars($data['status'] ?? 'Tidak Diketahui') ?></td>
                     <td>
-                        <a class="action-link" href="edit_kontrak.php?edit=<?= urlencode($file) ?>">✏️ Edit</a>
-                        <a class="action-link" href="daftar.php?hapus=<?= urlencode(basename($file)) ?>" onclick="return confirm('Yakin ingin menghapus kontrak ini?')">🗑️ Hapus</a>
+                       <a class="action-link" href="kontrak.php?edit=<?= urlencode($dir . '/' . $filename) ?>">✏️ Edit</a>
+                        <a class="action-link" href="daftar.php?hapus=<?= urlencode($filename) ?>" onclick="return confirm('Yakin ingin menghapus kontrak ini?')">🗑️ Hapus</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
