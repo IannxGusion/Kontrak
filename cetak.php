@@ -1,7 +1,6 @@
 <?php
 $dir = __DIR__ . "/kontrak/";
 
-// Validasi file
 if (!isset($_GET["file"])) {
     echo "File kontrak tidak ditemukan.";
     exit;
@@ -15,11 +14,17 @@ if (!file_exists($filepath)) {
     exit;
 }
 
-// Ambil data JSON
 $data = json_decode(file_get_contents($filepath), true);
 
-// Ambil nilai kontrak dengan validasi angka
-$nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nilai'] : 0;
+function rupiah($angka)
+{
+    return 'Rp ' . number_format($angka, 0, ',', '.');
+}
+
+function tampilPihak($kode, $nama)
+{
+    return htmlspecialchars(trim($kode . ' - ' . $nama));
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -53,9 +58,9 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
         }
 
         .info,
-        .poin,
+        .section,
         .footer {
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
 
         .label {
@@ -68,24 +73,23 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
             border: 1px solid #ccc;
             padding: 10px;
             margin-top: 6px;
+            border-radius: 5px;
         }
 
-        .deskripsi {
-            text-align: center;
-            font-weight: bold;
-            margin: 20px 0;
+        .nilai-box {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
         }
 
-        .footer td {
-            padding: 5px 10px;
-            vertical-align: top;
+        .nilai-box div {
+            width: 30%;
         }
 
         .ttd {
-            margin-top: 30px;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
+            margin-top: 50px;
         }
 
         .ttd div {
@@ -96,14 +100,24 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
         .ttd .nama {
             margin-top: 60px;
             border-top: 1px solid #000;
-            display: inline-block;
             padding-top: 4px;
+            display: inline-block;
             width: 80%;
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 200px;
+            height: auto;
         }
     </style>
 </head>
 
 <body onload="window.print()">
+    <img src="logolti.png" alt="Logo LTI" class="logo">
+
     <h2>KONTRAK KERJA</h2>
     <h3><?= htmlspecialchars($data['no_kontrak']) ?></h3>
 
@@ -112,41 +126,53 @@ $nilai = isset($data['nilai']) && is_numeric($data['nilai']) ? (float)$data['nil
         <div><span class="label">Tanggal</span>: <?= date("d F Y", strtotime($data['tanggal'])) ?></div>
     </div>
 
-    <div class="poin"><strong>1. Pihak 1</strong>
-        <div class="box"><?= nl2br(htmlspecialchars($data['pos1'])) ?></div>
+    <!-- Pihak 1 -->
+    <div class="section">
+        <strong>1. Pihak 1</strong>
+        <div class="box"><?= tampilPihak($data['pos1'] ?? '-', $data['nama_pos1'] ?? '-') ?></div>
     </div>
 
-    <?php if (!empty($data['pos2'])): ?>
-        <div class="poin"><strong>2. Pihak 2</strong>
-            <div class="box"><?= nl2br(htmlspecialchars($data['pos2'])) ?></div>
+    <!-- Pihak 2 -->
+    <?php if (!empty($data['pos2']) || !empty($data['nama_pos2'])): ?>
+        <div class="section">
+            <strong>2. Pihak 2</strong>
+            <div class="box"><?= tampilPihak($data['pos2'] ?? '-', $data['nama_pos2'] ?? '-') ?></div>
         </div>
     <?php endif; ?>
 
-    <?php if (!empty($data['pos3'])): ?>
-        <div class="poin"><strong>3. Pihak 3</strong>
-            <div class="box"><?= nl2br(htmlspecialchars($data['pos3'])) ?></div>
+    <!-- Pihak 3 -->
+    <?php if (!empty($data['pos3']) || !empty($data['nama_pos3'])): ?>
+        <div class="section">
+            <strong>3. Pihak 3</strong>
+            <div class="box"><?= tampilPihak($data['pos3'] ?? '-', $data['nama_pos3'] ?? '-') ?></div>
         </div>
     <?php endif; ?>
 
+    <!-- Deskripsi -->
     <?php if (!empty($data['deskripsi'])): ?>
-        <div class="deskripsi"><?= nl2br(htmlspecialchars($data['deskripsi'])) ?></div>
+        <div class="section">
+            <strong>Deskripsi Kontrak:</strong>
+            <div class="box"><?= nl2br(htmlspecialchars($data['deskripsi'])) ?></div>
+        </div>
     <?php endif; ?>
 
-    <table class="footer" style="width: 100%; margin-top: 30px;">
-        <tr>
-            <td style="text-align: left;">
-                <strong>Nilai</strong>:<br>Rp <?= number_format($nilai, 0, ',', '.') ?>
-            </td>
-            <td style="text-align: 50px;">
-                <strong>Durasi</strong>:<br><?= htmlspecialchars($data['durasi'] ?? '-') ?>
-            </td>
-            <td style="text-align: right;">
-                <strong>Status</strong>:<br><?= htmlspecialchars($data['status'] ?? '-') ?>
-            </td>
-        </tr>
-    </table>
+    <!-- Nilai, Durasi, Status -->
+    <div class="nilai-box">
+        <div>
+            <strong>Nilai:</strong><br>
+            <?= rupiah($data['nilai'] ?? 0) ?>
+        </div>
+        <div>
+            <strong>Durasi:</strong><br>
+            <?= htmlspecialchars($data['durasi'] ?? '-') ?>
+        </div>
+        <div>
+            <strong>Status:</strong><br>
+            <?= htmlspecialchars($data['status'] ?? '-') ?>
+        </div>
+    </div>
 
-
+    <!-- Tanda Tangan -->
     <div class="ttd">
         <div>
             Pihak Pertama<br><br><br>

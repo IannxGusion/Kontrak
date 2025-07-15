@@ -8,21 +8,25 @@ if (!isset($_SESSION['login'])) {
 $tahun = date("Y");
 $dir = __DIR__ . "/kontrak";
 $files = glob("$dir/kontrak_*.json");
-usort($files, function ($a, $b) {
-    return filemtime($b) - filemtime($a);
-});
+usort($files, fn($a, $b) => filemtime($b) - filemtime($a));
 
-// Hapus file jika ada request
+// Notifikasi berhasil
 $pesan = "";
+if (isset($_GET['success'])) $pesan = "✅ Kontrak berhasil disimpan atau diperbarui.";
+
+// Hapus file
 if (isset($_GET['hapus'])) {
-    $fileToDelete = $_GET['hapus'];
+    $fileToDelete = $dir . "/" . basename($_GET['hapus']);
     if (file_exists($fileToDelete)) {
         unlink($fileToDelete);
-        $pesan = "Kontrak berhasil dihapus.";
+        $pesan = "🗑️ Kontrak berhasil dihapus.";
     } else {
-        $pesan = "File tidak ditemukan.";
+        $pesan = "❌ File tidak ditemukan.";
     }
 }
+
+// Ambil filter status
+$filterStatus = $_GET['status'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -42,7 +46,6 @@ if (isset($_GET['hapus'])) {
             background: #2c3e50;
             padding: 15px;
             color: white;
-            text-align: center;
             font-size: 20px;
             font-weight: bold;
             display: flex;
@@ -60,6 +63,7 @@ if (isset($_GET['hapus'])) {
             border-radius: 5px;
             transition: background-color 0.3s ease;
         }
+
         .navbar a:hover {
             background-color: #1abc9c;
         }
@@ -74,10 +78,58 @@ if (isset($_GET['hapus'])) {
             animation: fadeIn 0.5s ease-in-out;
         }
 
+        h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .notif {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            text-align: center;
+        }
+
+        .filter-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select, .filter-bar button {
+            padding: 10px 14px;
+            font-size: 14px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .filter-bar select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .filter-bar button {
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .filter-bar button:hover {
+            background-color: #2980b9;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         th, td {
@@ -90,25 +142,12 @@ if (isset($_GET['hapus'])) {
             background-color: #ecf0f1;
         }
 
-        h2 {
-            text-align: center;
-            color: #2c3e50;
-        }
-
-        .notif {
-            background-color: #dff0d8;
-            color: #3c763d;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
         a.action-link {
             text-decoration: none;
             color: #3498db;
             margin-right: 10px;
         }
+
         a.action-link:hover {
             color: #1abc9c;
         }
@@ -125,35 +164,56 @@ if (isset($_GET['hapus'])) {
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>
-            <a href="cari_kontak.php">🔎 Cari kontrak</a>
+            <a href="kontrak_cetak.php">🖨️ cetak kontrak</a>
             <a href="daftar.php">📂 Daftar Kontrak</a>
             <a href="logout.php">🚪 Logout</a>
         </div>
     </div>
+
     <div class="container">
         <h2>📑 Kontrak yang Telah Dibuat</h2>
 
         <?php if ($pesan): ?>
-            <div class="notif">✅ <?= htmlspecialchars($pesan) ?></div>
+            <div class="notif"><?= htmlspecialchars($pesan) ?></div>
         <?php endif; ?>
+
+        <form method="get" class="filter-bar">
+            <label for="status"><strong>Filter Status:</strong></label>
+            <select name="status" id="status">
+                <option value="">-- Semua Status --</option>
+                <?php
+                $statusList = ['Menunggu', 'Diproses', 'Dipanding', 'Disetujui', 'Tidak Disetujui'];
+                foreach ($statusList as $s) {
+                    $selected = ($filterStatus === $s) ? 'selected' : '';
+                    echo "<option value=\"$s\" $selected>$s</option>";
+                }
+                ?>
+            </select>
+            <button type="submit">Terapkan</button>
+        </form>
 
         <table>
             <tr>
                 <th>No. Kontrak</th>
                 <th>Judul</th>
                 <th>Tanggal</th>
+                <th>Status</th>
                 <th>Aksi</th>
             </tr>
-            <?php foreach ($files as $file):
+            <?php
+            foreach ($files as $file):
                 $data = json_decode(file_get_contents($file), true);
+                if (!$data) continue;
+                if ($filterStatus && ($data['status'] ?? '') !== $filterStatus) continue;
             ?>
                 <tr>
-                    <td><?= $data['no_kontrak'] ?></td>
+                    <td><?= htmlspecialchars($data['no_kontrak']) ?></td>
                     <td><?= htmlspecialchars($data['judul']) ?></td>
                     <td><?= date("d-m-Y", strtotime($data['tanggal'])) ?></td>
+                    <td><?= htmlspecialchars($data['status'] ?? 'Tidak Diketahui') ?></td>
                     <td>
                         <a class="action-link" href="edit_kontrak.php?edit=<?= urlencode($file) ?>">✏️ Edit</a>
-                        <a class="action-link" href="hapus.php?file=<?= urlencode(basename($file)) ?>" onclick="return confirm('Yakin ingin menghapus?')">🗑️ Hapus</a>
+                        <a class="action-link" href="daftar.php?hapus=<?= urlencode(basename($file)) ?>" onclick="return confirm('Yakin ingin menghapus kontrak ini?')">🗑️ Hapus</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

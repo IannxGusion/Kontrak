@@ -22,48 +22,61 @@ $kontrakHariIni = array_filter(scandir($dir), function ($file) use ($tanggalHari
     return strpos($file, $tanggalHariIni) !== false && str_ends_with($file, '.json');
 });
 
-// Simpan kontrak baru
+
+
+// Simpan kontrak baru atau edit
 if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST["reset_counter"])) {
-    $nomor = $_POST["nomor"] ?? null;
-    if (!$nomor) {
+    $isEdit = isset($_POST["edit_file"]) && file_exists($_POST["edit_file"]);
+    $tanggal = $_POST["tanggal"] ?? date("Y-m-d");
+
+    if ($isEdit) {
+        $filejson = $_POST["edit_file"];
+        $nomor = (int)substr(json_decode(file_get_contents($filejson), true)['no_kontrak'], 0, 4);
+    } else {
         $counter_file = "$dir/counter_$tahun.txt";
         $nomor = 1;
         if (file_exists($counter_file)) {
             $nomor = (int)file_get_contents($counter_file) + 1;
         }
         file_put_contents($counter_file, $nomor);
+        $filejson = "$dir/kontrak_" . $tanggal . "_" . str_pad($nomor, 4, "0", STR_PAD_LEFT) . ".json";
     }
 
-    // Format kode berdasarkan pihak yang diisi
-    $pihak_kontrak = array_filter([$_POST["pos1"], $_POST["pos2"] ?? '', $_POST["pos3"] ?? '']);
-    $pihak_kode = implode("/", array_map(fn($v) => explode(" ", $v)[0], $pihak_kontrak));
-    $no_kontrak = str_pad($nomor, 4, "0", STR_PAD_LEFT) . "/" . $pihak_kode . "/" . $tahun;
+    $inputPihak = array_filter([$_POST['pos1'], $_POST['pos2'], $_POST['pos3']]);
+    $bagian = [];
+    foreach ($inputPihak as $kode) {
+        if (!in_array($kode, $bagian)) {
+            $bagian[] = $kode;
+        }
+    }
 
-    $filename = "kontrak_" . $tanggalHariIni . "_" . str_pad($nomor, 4, "0", STR_PAD_LEFT);
-    $filejson = "$dir/$filename.json";
-
-    // ✅ Normalisasi nilai: hanya ambil angka (hilangkan Rp, titik, koma, spasi)
-    $nilai_input = $_POST["nilai"] ?? '';
-    $nilai_bersih = preg_replace('/[^\d]/', '', $nilai_input);
+    $kodePihak = implode("/", $bagian);
+    $no_kontrak = str_pad($nomor, 4, "0", STR_PAD_LEFT) . "/" . $kodePihak . "/" . $tahun;
 
     $data = [
         "no_kontrak" => $no_kontrak,
         "judul" => $_POST["judul"],
-        "tanggal" => $_POST["tanggal"],
+        "tanggal" => $tanggal,
         "pos1" => $_POST["pos1"],
+        "nama_pos1" => $_POST["nama_pos1"],
+
         "pos2" => $_POST["pos2"] ?? '',
+        "nama_pos2" => $_POST["nama_pos2"] ?? '',
+
         "pos3" => $_POST["pos3"] ?? '',
+        "nama_pos3" => $_POST["nama_pos3"] ?? '',
+
         "deskripsi" => $_POST["deskripsi"] ?? '',
-        "nilai" => $nilai_bersih,
+        "nilai" => $_POST["nilai"] ?? '',
         "durasi" => $_POST["durasi"] ?? '',
-        "status" => $_POST["status"] ?? 'Aktif'
+        "status" => $_POST["status"] ?? ''
     ];
-    file_put_contents($filejson, json_encode($data));
-    header("Location: kontrak.php?success=1");
+
+    file_put_contents($filejson, json_encode($data, JSON_PRETTY_PRINT));
+    header("Location: daftar.php?success=1");
     exit;
 }
 
-// Mode edit kontrak
 $editData = null;
 if (isset($_GET["edit"])) {
     $filepath = $_GET["edit"];
@@ -72,7 +85,6 @@ if (isset($_GET["edit"])) {
     }
 }
 
-// Preview nomor kontrak
 $previewNo = "";
 if ($editData) {
     $previewNo = $editData['no_kontrak'];
@@ -85,7 +97,7 @@ if ($editData) {
         if (file_exists($counter_file)) {
             $next_nomor = (int)file_get_contents($counter_file) + 1;
         }
-        // Ambil input saat ini dari $_POST jika tersedia
+
         $p1 = $_POST["pos1"] ?? '';
         $p2 = $_POST["pos2"] ?? '';
         $p3 = $_POST["pos3"] ?? '';
@@ -103,9 +115,9 @@ if ($editData) {
 <html lang="id">
 
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <title>Form Kontrak</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
@@ -155,7 +167,7 @@ if ($editData) {
             width: 100%;
             padding: 10px;
             margin-top: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
@@ -182,9 +194,8 @@ if ($editData) {
 
         .note {
             font-size: 13px;
-            color: #888;
-            margin-top: -15px;
-            margin-bottom: 15px;
+            color: #555;
+            margin: 5px 0 15px 0;
         }
 
         .alert-success {
@@ -195,12 +206,6 @@ if ($editData) {
             margin-bottom: 20px;
             border: 1px solid #c3e6cb;
             animation: fadeIn 0.6s ease;
-        }
-
-        .alert-success::before {
-            content: "✔ ";
-            font-weight: bold;
-            margin-right: 5px;
         }
 
         .kontrak-preview-no {
@@ -227,6 +232,14 @@ if ($editData) {
             }
         }
     </style>
+    <script>
+        const pihakNames = {
+            "LTI": "PT Lintas Teknologi Indonesia",
+            "DU": "PT Dunia Usaha",
+            "DK": "PT Daya Kreasi",
+            "DO": "PT Digital One"
+        };
+    </script>
 </head>
 
 <body>
@@ -235,7 +248,7 @@ if ($editData) {
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>
-            <a href="cari_kontak.php">🔎 Cari kontrak</a>
+            <a href="kontrak_cetak.php">🖨️ cetak kontrak</a>
             <a href="daftar.php">📂 Daftar Kontrak</a>
             <a href="logout.php">🚪 Logout</a>
         </div>
@@ -245,11 +258,8 @@ if ($editData) {
         <?php if (isset($_GET['success'])): ?>
             <div class="alert-success">✅ Kontrak berhasil disimpan.</div>
         <?php endif; ?>
-
         <?php if (isset($_GET['reset'])): ?>
-            <div class="alert-success" style="background:#fff3cd; color:#856404; border-color:#ffeeba;">
-                🔁 Nomor kontrak berhasil di-reset ke 0001.
-            </div>
+            <div class="alert-success" style="background:#fff3cd; color:#856404; border-color:#ffeeba;">🔁 Nomor kontrak berhasil di-reset ke 0001.</div>
         <?php endif; ?>
 
         <form method="post" style="text-align:right;">
@@ -260,7 +270,7 @@ if ($editData) {
         <?php if ($previewNo !== "Maksimal 2 kontrak per hari telah tercapai"): ?>
             <form method="post">
                 <?php if ($editData): ?>
-                    <input type="hidden" name="nomor" value="<?= (int)substr($editData['no_kontrak'], 0, 4) ?>">
+                    <input type="hidden" name="edit_file" value="<?= $_GET['edit'] ?>">
                 <?php endif; ?>
 
                 <label>Judul Kontrak:</label>
@@ -269,33 +279,67 @@ if ($editData) {
                 <label>Tanggal Kontrak:</label>
                 <input type="date" name="tanggal" required value="<?= $editData['tanggal'] ?? date('Y-m-d') ?>">
 
-                <?php
-                $pihak_options = ["LTI", "DU", "DK", "DO"];
-                ?>
-
+                <!-- Pihak 1 -->
                 <label>Pihak 1:</label>
-                <select name="pos1" required>
-                    <option value="">-- Pilih Pihak 1 --</option>
-                    <?php foreach ($pihak_options as $val): ?>
-                        <option value="<?= $val ?>" <?= ($editData['pos1'] ?? '') == $val ? 'selected' : '' ?>><?= $val ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select name="pos1" required>
+                        <option value="">-- Pilih Kode --</option>
+                        <option value="LTI" <?= ($editData['pos1'] ?? '') == 'LTI' ? 'selected' : '' ?>>LTI</option>
+                        <option value="DU" <?= ($editData['pos1'] ?? '') == 'DU' ? 'selected' : '' ?>>DU</option>
+                        <option value="DK" <?= ($editData['pos1'] ?? '') == 'DK' ? 'selected' : '' ?>>DK</option>
+                        <option value="DO" <?= ($editData['pos1'] ?? '') == 'DO' ? 'selected' : '' ?>>DO</option>
+                    </select>
 
+                    <select name="nama_pos1" required>
+                        <option value="">-- Pilih Nama --</option>
+                        <option value="PT Lintas Teknologi Indonesia" <?= ($editData['nama_pos1'] ?? '') == 'PT Lintas Teknologi Indonesia' ? 'selected' : '' ?>>PT Lintas Teknologi Indonesia</option>
+                        <option value="PT Dunia Usaha" <?= ($editData['nama_pos1'] ?? '') == 'PT Dunia Usaha' ? 'selected' : '' ?>>PT Dunia Usaha</option>
+                        <option value="PT Daya Kreasi" <?= ($editData['nama_pos1'] ?? '') == 'PT Daya Kreasi' ? 'selected' : '' ?>>PT Daya Kreasi</option>
+                        <option value="PT Digital One" <?= ($editData['nama_pos1'] ?? '') == 'PT Digital One' ? 'selected' : '' ?>>PT Digital One</option>
+                    </select>
+                </div>
+
+                <!-- Pihak 2 -->
                 <label>Pihak 2:</label>
-                <select name="pos2">
-                    <option value="">-- Pilih Pihak 2 --</option>
-                    <?php foreach ($pihak_options as $val): ?>
-                        <option value="<?= $val ?>" <?= ($editData['pos2'] ?? '') == $val ? 'selected' : '' ?>><?= $val ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select name="pos2">
+                        <option value="">-- Pilih Kode --</option>
+                        <option value="LTI" <?= ($editData['pos2'] ?? '') == 'LTI' ? 'selected' : '' ?>>LTI</option>
+                        <option value="DU" <?= ($editData['pos2'] ?? '') == 'DU' ? 'selected' : '' ?>>DU</option>
+                        <option value="DK" <?= ($editData['pos2'] ?? '') == 'DK' ? 'selected' : '' ?>>DK</option>
+                        <option value="DO" <?= ($editData['pos2'] ?? '') == 'DO' ? 'selected' : '' ?>>DO</option>
+                    </select>
 
+                    <select name="nama_pos2">
+                        <option value="">-- Pilih Nama --</option>
+                        <option value="PT Lintas Teknologi Indonesia" <?= ($editData['nama_pos2'] ?? '') == 'PT Lintas Teknologi Indonesia' ? 'selected' : '' ?>>PT Lintas Teknologi Indonesia</option>
+                        <option value="PT Dunia Usaha" <?= ($editData['nama_pos2'] ?? '') == 'PT Dunia Usaha' ? 'selected' : '' ?>>PT Dunia Usaha</option>
+                        <option value="PT Daya Kreasi" <?= ($editData['nama_pos2'] ?? '') == 'PT Daya Kreasi' ? 'selected' : '' ?>>PT Daya Kreasi</option>
+                        <option value="PT Digital One" <?= ($editData['nama_pos2'] ?? '') == 'PT Digital One' ? 'selected' : '' ?>>PT Digital One</option>
+                    </select>
+                </div>
+
+                <!-- Pihak 3 -->
                 <label>Pihak 3:</label>
-                <select name="pos3">
-                    <option value="">-- Pilih Pihak 3 --</option>
-                    <?php foreach ($pihak_options as $val): ?>
-                        <option value="<?= $val ?>" <?= ($editData['pos3'] ?? '') == $val ? 'selected' : '' ?>><?= $val ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select name="pos3">
+                        <option value="">-- Pilih Kode --</option>
+                        <option value="LTI" <?= ($editData['pos3'] ?? '') == 'LTI' ? 'selected' : '' ?>>LTI</option>
+                        <option value="DU" <?= ($editData['pos3'] ?? '') == 'DU' ? 'selected' : '' ?>>DU</option>
+                        <option value="DK" <?= ($editData['pos3'] ?? '') == 'DK' ? 'selected' : '' ?>>DK</option>
+                        <option value="DO" <?= ($editData['pos3'] ?? '') == 'DO' ? 'selected' : '' ?>>DO</option>
+                    </select>
+
+                    <select name="nama_pos3">
+                        <option value="">-- Pilih Nama --</option>
+                        <option value="PT Lintas Teknologi Indonesia" <?= ($editData['nama_pos3'] ?? '') == 'PT Lintas Teknologi Indonesia' ? 'selected' : '' ?>>PT Lintas Teknologi Indonesia</option>
+                        <option value="PT Dunia Usaha" <?= ($editData['nama_pos3'] ?? '') == 'PT Dunia Usaha' ? 'selected' : '' ?>>PT Dunia Usaha</option>
+                        <option value="PT Daya Kreasi" <?= ($editData['nama_pos3'] ?? '') == 'PT Daya Kreasi' ? 'selected' : '' ?>>PT Daya Kreasi</option>
+                        <option value="PT Digital One" <?= ($editData['nama_pos3'] ?? '') == 'PT Digital One' ? 'selected' : '' ?>>PT Digital One</option>
+                    </select>
+                </div>
+
+
 
                 <label>Deskripsi Kontrak:</label>
                 <textarea name="deskripsi"><?= $editData['deskripsi'] ?? '' ?></textarea>
@@ -308,13 +352,16 @@ if ($editData) {
 
                 <label>Status Kontrak:</label>
                 <select name="status">
-                    <option value="Aktif" <?= ($editData['status'] ?? '') == 'Aktif' ? 'selected' : '' ?>>Aktif</option>
-                    <option value="Tidak Aktif" <?= ($editData['status'] ?? '') == 'Tidak Aktif' ? 'selected' : '' ?>>Tidak Aktif</option>
+                    <?php
+                    $statusOptions = ["Aktif", "Tidak Aktif", "Menunggu", "Diproses", "Dipanding", "Disetujui", "Tidak Disetujui"];
+                    foreach ($statusOptions as $status):
+                    ?>
+                        <option value="<?= $status ?>" <?= ($editData['status'] ?? '') == $status ? 'selected' : '' ?>><?= $status ?></option>
+                    <?php endforeach; ?>
                 </select>
 
-                <button type="submit">📝 Buat Kontrak</button>
+                <button type="submit">📝 Simpan Kontrak</button>
             </form>
-
             <div class="kontrak-preview-no"><?= $previewNo ?></div>
         <?php else: ?>
             <div style="text-align:center; padding:20px; color:red; font-weight:bold;">
@@ -322,35 +369,43 @@ if ($editData) {
             </div>
         <?php endif; ?>
     </div>
+
     <script>
-        const pihak1 = document.querySelector('select[name="pos1"]');
-        const pihak2 = document.querySelector('select[name="pos2"]');
-        const pihak3 = document.querySelector('select[name="pos3"]');
-        const previewBox = document.querySelector('.kontrak-preview-no');
+    const pihak1 = document.querySelector('select[name="pos1"]');
+    const pihak2 = document.querySelector('select[name="pos2"]');
+    const pihak3 = document.querySelector('select[name="pos3"]');
+    const previewBox = document.querySelector('.kontrak-preview-no');
 
-        const nextNomor = "<?= str_pad($next_nomor, 4, "0", STR_PAD_LEFT) ?>";
-        const tahun = "<?= $tahun ?>";
+    const nextNomor = "<?= str_pad($next_nomor ?? 1, 4, "0", STR_PAD_LEFT) ?>";
+    const tahun = "<?= $tahun ?>";
 
-        function updatePreview() {
-            const kode1 = pihak1.value.trim();
-            const kode2 = pihak2.value.trim();
-            const kode3 = pihak3.value.trim();
+    function updatePreview() {
+        const kode1 = pihak1.value.trim();
+        const kode2 = pihak2.value.trim();
+        const kode3 = pihak3.value.trim();
 
-            let bagianPihak = [kode1, kode2, kode3].filter(Boolean).join('/');
-            if (bagianPihak.length === 0) {
-                previewBox.textContent = 'Harap pilih minimal 1 pihak untuk melihat nomor kontrak';
-                return;
+        // Filter hanya pihak unik yang dipilih
+        const unikPihak = [];
+        [kode1, kode2, kode3].forEach(kode => {
+            if (kode && !unikPihak.includes(kode)) {
+                unikPihak.push(kode);
             }
+        });
 
-            const hasil = `${nextNomor}/${bagianPihak}/${tahun}`;
-            previewBox.textContent = hasil;
+        if (unikPihak.length === 0) {
+            previewBox.textContent = 'Harap pilih minimal 1 pihak untuk melihat nomor kontrak';
+            return;
         }
 
-        [pihak1, pihak2, pihak3].forEach(el => el.addEventListener('change', updatePreview));
+        const hasil = `${nextNomor}/${unikPihak.join('/')}/${tahun}`;
+        previewBox.textContent = hasil;
+    }
 
-        // Panggil saat pertama kali jika data kosong
-        updatePreview();
-    </script>
+    [pihak1, pihak2, pihak3].forEach(el => el.addEventListener('change', updatePreview));
+
+    // Jalankan saat halaman dibuka
+    updatePreview();
+</script>
 
 </body>
 
