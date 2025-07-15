@@ -232,7 +232,7 @@ if ($editData) {
 
 <body>
     <div class="navbar">
-         <img src="logolti.png" width="200px" height="auto" alt="logo">
+        <img src="logolti.png" width="200px" height="auto" alt="logo">
         <div>
             <a href="dashboard.php">🏠 Halaman Utama</a>
             <a href="kontrak.php">📝 Buat Kontrak</a>
